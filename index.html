@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wood Material Designer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #F5F5F7; --card-bg: #FFFFFF; --text-main: #1D1D1F; --text-sub: #86868B; --accent: #A68972; --border-radius: 16px; --transition-speed: 0.3s; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 40px; display: flex; justify-content: center; }
+        #app { width: 1000px; position: relative; }
+        .stage { display: none; animation: fadeIn var(--transition-speed); }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .back-btn { position: absolute; top: -40px; left: 0; cursor: pointer; color: var(--text-sub); font-size: 14px; }
+        .section-box { background: var(--card-bg); padding: 40px; border-radius: var(--border-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
+        
+        .material-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+        .material-card { border: 2px solid transparent; border-radius: var(--border-radius); padding: 20px; cursor: pointer; transition: all var(--transition-speed); }
+        .material-card:hover { transform: translateY(-5px); background-color: #f9f9f9; }
+        .wood-preview { width: 100%; height: 150px; border-radius: 8px; margin-bottom: 15px; }
+        .wood-maple { background-color: #F8E0C0; background-image: repeating-linear-gradient(95deg, rgba(200, 160, 120, 0.2) 0px, rgba(200, 160, 120, 0.2) 2px, transparent 2px, transparent 15px); }
+        .wood-cherry { background-color: #C88060; background-image: repeating-linear-gradient(85deg, rgba(100, 50, 40, 0.3) 0px, rgba(100, 50, 40, 0.3) 3px, transparent 3px, transparent 20px); }
+        .wood-walnut { background-color: #604030; background-image: repeating-linear-gradient(105deg, rgba(40, 20, 10, 0.4) 0px, rgba(40, 20, 10, 0.4) 4px, transparent 4px, transparent 25px); }
+        
+        .client-img { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px; object-fit: cover; background: #eee; }
+        .speech-container { position: relative; display: inline-block; width: 100%; margin-bottom: 20px; }
+        .request-label { position: absolute; top: -12px; left: 20px; background: var(--accent); color: white; padding: 2px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+        .speech-bubble { background: #f0f0f0; padding: 30px 20px 20px; border-radius: 20px; font-size: 18px; text-align: left; }
+        .ux-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+        .ux-card { padding: 20px; background: #f9f9f9; border-radius: var(--border-radius); text-align: left; }
+        .firework { position: fixed; width: 5px; height: 5px; border-radius: 50%; animation: explode 1s ease-out infinite; }
+        @keyframes explode { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(20); opacity: 0; } }
+        button { background-color: var(--text-main); color: white; border: none; padding: 12px 24px; border-radius: 20px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="stage-start" class="stage active">
+        <div class="section-box">
+            <h1>Wood Material Designer</h1>
+            <p>목재 물성 분석 및 UX 디자인 시뮬레이션</p>
+            <button onclick="goToStage('stage-lab')">START</button>
+        </div>
+    </div>
+    <div id="stage-lab" class="stage">
+        <div class="back-btn" onclick="goToStage('stage-start')">← 이전 화면</div>
+        <div class="section-box">
+            <h2>1. Material Lab</h2>
+            <div class="material-grid">
+                <div class="material-card" onclick="analyzeWood('maple')"><div class="wood-preview wood-maple"></div><h3>메이플</h3></div>
+                <div class="material-card" onclick="analyzeWood('cherry')"><div class="wood-preview wood-cherry"></div><h3>벚나무</h3></div>
+                <div class="material-card" onclick="analyzeWood('walnut')"><div class="wood-preview wood-walnut"></div><h3>호두나무</h3></div>
+            </div>
+            <div id="analysis-panel" style="display: none; margin-top: 30px; text-align: left;">
+                <h3 id="analysis-title">분석 결과</h3>
+                <div id="metrics-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+            </div>
+        </div>
+    </div>
+    <div id="stage-ux" class="stage">
+        <div class="back-btn" onclick="goToStage('stage-lab')">← 이전 화면</div>
+        <div class="section-box">
+            <h2>2. UX 분석</h2>
+            <div class="ux-cards" id="ux-container"></div>
+            <button onclick="goToStage('stage-client')">의뢰 받기</button>
+        </div>
+    </div>
+    <div id="stage-client" class="stage">
+        <div class="back-btn" onclick="goToStage('stage-lab')">← 이전 화면</div>
+        <div class="section-box">
+            <h2>3. Client Request</h2>
+            <div class="speech-container">
+                <div class="request-label">의뢰</div>
+                <div id="speech-bubble" class="speech-bubble"></div>
+            </div>
+            <img id="client-img" src="" alt="의뢰인" class="client-img">
+            <div id="choice-area" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;"></div>
+        </div>
+    </div>
+    <div id="stage-clear" class="stage">
+        <div class="section-box">
+            <h1>🎉 게임 클리어!</h1>
+            <p>모든 의뢰를 성공적으로 해결했습니다. 목재의 물성을 분석하고 사용자 경험을 고려하여 적절한 소재를 선택하는 산업디자인 과정을 완료했습니다.</p>
+            <button onclick="location.reload()">다시 시작하기</button>
+        </div>
+    </div>
+</div>
+<script>
+    const woodData = {
+        maple: { 
+            name: "메이플", 
+            metrics: { 
+                "밀도": "높은 밀도로 구조적 안정성이 우수함", 
+                "경도": "경도가 높아 긁힘과 마모에 강함", 
+                "결": "결이 고르고 균일하여 깔끔한 인상을 형성함", 
+                "색": "밝고 깨끗한 색감으로 미니멀한 분위기를 전달함", 
+                "가공성": "가공은 다소 어렵지만 변형이 적음", 
+                "내구성": "형태 변화가 적고 내구성이 우수함", 
+                "표면가공": "사포로 연마하면 균일하게 다듬어져 매끄러운 촉감을 형성함", 
+                "수분실험": "수분에 노출되어도 비교적 변형이 적어 안정적인 상태를 유지함" 
+            },
+            ux: "밝은 톤과 미니멀한 질감으로 현대적인 오피스 공간에 개방감을 줍니다.<br><strong>특징:</strong> 구조적 안정성, 긁힘에 강함, 깔끔하고 미니멀한 이미지" 
+        },
+        cherry: { 
+            name: "벚나무", 
+            metrics: { 
+                "밀도": "중간 정도의 밀도로 균형 잡힌 특성을 가짐", 
+                "경도": "중간 정도의 경도로 일반적인 사용에 적합함", 
+                "결": "부드럽고 균일한 결로 편안한 촉감을 제공함", 
+                "색": "시간이 지날수록 붉은 갈색으로 변화하여 따뜻한 분위기를 형성함", 
+                "가공성": "가공성이 뛰어나 다양한 형태 구현이 쉬움", 
+                "내구성": "일반적인 사용 환경에서 안정적인 내구성을 보임", 
+                "표면가공": "부드럽게 연마되어 자연스럽고 따뜻한 촉감을 형성함", 
+                "수분실험": "약간의 표면 변화는 있지만 안정적인 상태를 유지함" 
+            },
+            ux: "시간이 지날수록 변하는 색감으로 사용자에게 따뜻함과 세월의 멋을 전달합니다.<br><strong>특징:</strong> 따뜻한 감성, 부드러운 촉감, 사용자 친화적" 
+        },
+        walnut: { 
+            name: "호두나무", 
+            metrics: { 
+                "밀도": "비교적 낮은 밀도로 무게 부담이 적음", 
+                "경도": "중간 정도의 경도를 가짐", 
+                "결": "뚜렷한 결무늬가 나타나 재료의 개성이 잘 드러남", 
+                "색": "짙은 갈색으로 고급스럽고 차분한 분위기를 형성함", 
+                "가공성": "가공성이 우수하여 다양한 형태 구현이 가능함", 
+                "내구성": "치수 안정성과 내구성이 우수하여 장기간 사용에 적합함", 
+                "표면가공": "연마하면 결이 더욱 선명해져 질감이 강조됨", 
+                "수분실험": "수분에 대한 저항성이 비교적 높아 형태 안정성을 유지함" 
+            },
+            ux: "깊은 색감과 고급스러운 질감으로 CEO에게 신뢰감과 무게감을 제공합니다.<br><strong>특징:</strong> 프리미엄 이미지, 장기 사용 적합, 고급스러운 분위기" 
+        }
+    };
+    const requests = [
+        { text: "오랫동안 사용하며 긁힘에 강하고 구조적 안정성이 중요한 제품이에요.", answer: "메이플", img: "images/의뢰인1.jpg" },
+        { text: "사용자가 자주 손으로 만지며 따뜻하고 편안한 분위기를 전달해야 하는 제품입니다!", answer: "벚나무", img: "images/의뢰인2.jpg" },
+        { text: "고급스러운 공간에서 사용할 프리미엄 제품이며 장기간 사용을 고려한 제품이오", answer: "호두나무", img: "images/의뢰인3.jpg" }
+    ];
+    let currentReq = 0, analyzedWoods = new Set();
+    function goToStage(stageId) { document.querySelectorAll('.stage').forEach(el => el.classList.remove('active')); document.getElementById(stageId).classList.add('active'); }
+    function analyzeWood(key) {
+        analyzedWoods.add(key); const data = woodData[key];
+        document.getElementById('analysis-panel').style.display = 'block';
+        document.getElementById('analysis-title').innerText = "분석 결과: " + data.name;
+        document.getElementById('metrics-container').innerHTML = Object.entries(data.metrics).map(([k, v]) => `<div><b>${k}</b>: ${v}</div>`).join('');
+        if (analyzedWoods.size === 3) setTimeout(() => { if (confirm("분석 완료! UX 분석으로 이동할까요?")) { renderUX(); goToStage('stage-ux'); } }, 500);
+    }
+    function renderUX() {
+        document.getElementById('ux-container').innerHTML = Object.values(woodData).map(w => `<div class="ux-card"><h3>${w.name}</h3><p>${w.ux}</p></div>`).join('');
+    }
+    function renderClient() {
+        const req = requests[currentReq];
+        document.getElementById('speech-bubble').innerText = req.text;
+        document.getElementById('client-img').src = req.img;
+        document.getElementById('choice-area').innerHTML = Object.keys(woodData).map(w => `<div style="background:#eee; padding:15px; cursor:pointer;" onclick="checkAnswer('${woodData[w].name}')">${woodData[w].name}</div>`).join('');
+    }
+    function checkAnswer(selected) {
+        if (selected === requests[currentReq].answer) {
+            alert("정답!"); currentReq++;
+            if (currentReq < requests.length) renderClient();
+            else showClear();
+        } else alert("틀렸습니다.");
+    }
+    function showClear() {
+        goToStage('stage-clear');
+        for (let i = 0; i < 30; i++) {
+            const fw = document.createElement('div'); fw.className = 'firework';
+            fw.style.left = Math.random() * 100 + 'vw'; fw.style.top = Math.random() * 100 + 'vh';
+            fw.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(fw); setTimeout(() => fw.remove(), 1000);
+        }
+    }
+    renderClient();
+</script>
+</body>
+</html>
